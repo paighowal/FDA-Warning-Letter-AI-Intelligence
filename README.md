@@ -2,6 +2,8 @@
 
 An AI-powered inspection readiness platform that transforms the FDA's public warning letter corpus into actionable compliance intelligence. Ask natural language questions and receive structured regulatory briefs backed by real enforcement data.
 
+https://github.com/user-attachments/assets/46aabc64-ab2c-4fd6-9d02-614523d9ee49
+
 ---
 
 ## What It Does
@@ -11,6 +13,8 @@ The tool answers questions like:
 - *"What CGMP violations appeared most in 2024–2025 warning letters?"*
 - *"Which oncology sponsors received GCP-related warning letters recently?"*
 - *"How has FDA enforcement changed in the last 3 years?"*
+
+
 
 It does this by running an AI agent that searches a local database of 3,500+ real FDA warning letters, finds the most relevant ones (already pre-classified), and synthesises a structured inspection readiness brief — typically in under 10 seconds.
 
