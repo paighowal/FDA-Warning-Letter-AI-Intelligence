@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FDA Warning Letter Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sw:234px;--navy:#0D1B36;--blue:#2563EB;--blue-l:#EFF6FF;--blue-b:#BFDBFE;
+  --green:#10B981;--green-l:#ECFDF5;--amber:#F59E0B;--red:#EF4444;
+  --surf:#F3F6FC;--card:#fff;--bdr:#E2E8F4;
+  --tx:#0F172A;--tx2:#475569;--tx3:#94A3B8;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --r:10px;--r2:6px;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--surf);color:var(--tx);line-height:1.5;min-height:100vh;display:flex}
+.sb{width:var(--sw);min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100}
+.sb-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.logo-m{width:34px;height:34px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;margin-bottom:10px}
+.logo-n{font-size:13px;font-weight:600;color:#fff}
+.logo-s{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.09em;margin-top:2px}
+.sb-nav{padding:14px 10px;flex:1}
+.nav-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.28);padding:0 8px;margin:14px 0 5px}
+.nav-a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;cursor:pointer;margin-bottom:2px;font-size:13px;color:rgba(255,255,255,.48);font-weight:400;text-decoration:none;transition:all .14s;-webkit-user-select:none;user-select:none}
+.nav-a:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+.nav-a.on{background:rgba(37,99,235,.28);color:#93C5FD;font-weight:500}
+.nav-a svg{width:15px;height:15px;opacity:.75;flex-shrink:0}.nav-a.on svg{opacity:1}
+.sb-bot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-row{display:flex;justify-content:space-between;margin-bottom:6px}
+.sb-k{font-size:11px;color:rgba(255,255,255,.3)}.sb-v{font-size:11px;font-weight:500;color:rgba(255,255,255,.62)}
+.main{margin-left:var(--sw);flex:1;padding:30px 36px;max-width:calc(100vw - var(--sw))}
+.pg{display:none}.pg.on{display:block}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:3px}
+.h1{font-size:21px;font-weight:700;color:var(--tx);letter-spacing:-.3px;margin-bottom:3px}
+.sub{font-size:13px;color:var(--tx2);margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);box-shadow:var(--sh)}
+.qbox{padding:20px 22px;margin-bottom:16px}
+.ql{font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:9px}
+.qrow{display:flex;gap:11px;align-items:flex-start}
+textarea.qi{flex:1;resize:none;border:1.5px solid var(--bdr);border-radius:var(--r2);padding:11px 13px;font-family:inherit;font-size:13.5px;color:var(--tx);background:var(--surf);height:74px;outline:none;transition:border-color .14s,box-shadow .14s;line-height:1.5}
+textarea.qi:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.btn{border:none;border-radius:var(--r2);padding:10px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .14s;white-space:nowrap}
+.bp{background:var(--blue);color:#fff}.bp:hover{background:#1D4ED8;box-shadow:0 4px 14px rgba(37,99,235,.3)}.bp:active{transform:translateY(1px)}
+.bs{background:var(--surf);border:1px solid var(--bdr);color:var(--tx2)}.bs:hover{background:var(--card)}
+.ex-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);margin:16px 0 8px}
+.ex-g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.exb{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 13px;font-family:inherit;font-size:12px;color:var(--tx2);cursor:pointer;text-align:left;line-height:1.5;transition:all .14s}
+.exb:hover{background:var(--blue-l);border-color:var(--blue-b);color:#1E40AF}
+.steps-card{padding:16px 20px;margin-bottom:14px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);margin-bottom:12px}
+.tl{border-left:2px solid var(--blue);margin-left:4px}
+.step{position:relative;padding:0 0 10px 20px;opacity:0;transform:translateY(4px);animation:fu .3s ease forwards}
+@keyframes fu{to{opacity:1;transform:none}}
+.dot{position:absolute;left:-9px;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surf)}
+.d-done{background:var(--green)}.d-run{background:var(--amber)}.d-err{background:var(--red)}
+.st{font-size:11.5px;color:var(--tx2);font-family:'Fira Mono',monospace;line-height:1.4;word-break:break-all}
+.brief-card{margin-bottom:18px}
+.bh-row{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--bdr);background:linear-gradient(90deg,#F8FAFF,#fff);border-radius:var(--r) var(--r) 0 0}
+.bbadge{font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-l);padding:3px 11px;border-radius:20px;border:1px solid var(--blue-b)}
+.bm{font-size:11px;color:var(--tx3)}
+.bb{padding:20px 24px;font-size:13.5px;line-height:1.75;color:var(--tx2)}
+.bb h3{font-size:13.5px;font-weight:600;color:var(--tx);margin:16px 0 7px}.bb h3:first-child{margin-top:0}
+.bb p{margin-bottom:10px}.bb ul{padding-left:20px;margin-bottom:10px}.bb li{margin-bottom:4px}
+.bb strong{color:var(--tx);font-weight:600}
+.bb table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.bb th{background:var(--surf);padding:7px 13px;text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);border-bottom:1.5px solid var(--bdr)}
+.bb td{padding:8px 13px;border-bottom:1px solid #F1F5FB;color:var(--tx2)}.bb tr:last-child td{border-bottom:none}
+.src-h{font-size:15px;font-weight:700;color:var(--tx);margin:22px 0 3px}
+.src-s{font-size:12px;color:var(--tx3);margin-bottom:10px}
+.tbl{overflow:hidden}
+.tbl table{width:100%;border-collapse:collapse}
+.tbl th{background:var(--surf);padding:9px 13px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);border-bottom:1.5px solid var(--bdr)}
+.tbl td{padding:10px 13px;font-size:12.5px;border-bottom:1px solid #F1F5FB;vertical-align:middle;color:var(--tx2)}.tbl tr:last-child td{border-bottom:none}
+.tbl a{color:var(--blue);text-decoration:none;font-weight:500}.tbl a:hover{text-decoration:underline}
+.err-box{background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--r2);padding:12px 16px;font-size:13px;color:#B91C1C;margin-bottom:12px}
+.drange{position:relative;height:6px;margin:14px 0 6px}
+.dr-track{position:absolute;inset:0;background:var(--bdr);border-radius:4px}
+.dr-fill{position:absolute;top:0;bottom:0;background:var(--blue);border-radius:4px}
+.dr-inp{position:absolute;width:100%;height:0;top:50%;appearance:none;-webkit-appearance:none;background:transparent;pointer-events:none;outline:none}
+.dr-inp::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:17px;height:17px;background:#fff;border:2.5px solid var(--blue);border-radius:50%;pointer-events:all;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.14);margin-top:-8px}
+.dr-inp::-moz-range-thumb{width:17px;height:17px;background:#fff;border:2.5px solid var(--blue);border-radius:50%;pointer-events:all;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.fp{padding:15px 20px;margin-bottom:18px}
+.fg{display:grid;gap:14px}
+.fg-5{grid-template-columns:1.4fr repeat(4,1fr)}
+.fg-4{grid-template-columns:repeat(4,1fr)}
+.fg-6{grid-template-columns:1.4fr repeat(5,1fr)}
+.flbl{font-size:11px;color:var(--tx3);margin-bottom:4px}
+select.fs,input.fi{width:100%;border:1.5px solid var(--bdr);border-radius:var(--r2);padding:8px 10px;font-family:inherit;font-size:12.5px;color:var(--tx);background:var(--surf);outline:none;transition:border-color .14s,box-shadow .14s}
+select.fs{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+select.fs:focus,input.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-height:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:20px;padding:3px 10px;font-size:11px;color:#3730A3;font-weight:500}
+.chip button{background:none;border:none;cursor:pointer;color:#6366F1;font-size:13px;line-height:1;padding:0 2px;display:flex;align-items:center}.chip button:hover{color:#4338CA}
+.clr-btn{background:none;border:1px solid var(--bdr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--tx3);cursor:pointer;flex-shrink:0;transition:all .14s}.clr-btn:hover{border-color:#CBD5E1;color:var(--tx2)}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.sc{padding:18px 20px}
+.sc-ico{font-size:19px;margin-bottom:9px;display:block}
+.sc-lbl{font-size:10.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.sc-val{font-size:27px;font-weight:700;color:var(--tx);letter-spacing:-.4px;line-height:1}
+.sc-hint{font-size:11px;color:var(--tx3);margin-top:4px}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.cc{padding:16px 18px}
+.ct{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.ct-hint{font-size:11px;color:var(--tx3);font-weight:400}
+.cw{height:210px;position:relative}.cw-sm{height:190px;position:relative}
+canvas{cursor:default}.chart-clickable canvas{cursor:pointer}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;line-height:1.4;white-space:nowrap}
+.bdh{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+.bdm{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.bdl{background:var(--green-l);color:#065F46;border:1px solid #A7F3D0}
+.bdv{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.bdc{background:#F0FDF4;color:#14532D;border:1px solid #BBF7D0}
+.ex-tbl-wrap{overflow:hidden}
+.ex-tbl table{width:100%;border-collapse:collapse;font-size:12.5px}
+.ex-tbl th{background:var(--surf);padding:9px 12px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);border-bottom:1.5px solid var(--bdr);white-space:nowrap;cursor:pointer;-webkit-user-select:none;user-select:none}
+.ex-tbl th:hover{color:var(--tx2)}.ex-tbl th.asc::after{content:" ↑"}.ex-tbl th.desc::after{content:" ↓"}
+.ex-tbl td{padding:10px 12px;border-bottom:1px solid #F1F5FB;vertical-align:middle;color:var(--tx2)}.ex-tbl tr:last-child td{border-bottom:none}
+.ex-tbl a{color:var(--blue);font-weight:500;text-decoration:none}.ex-tbl a:hover{text-decoration:underline}
+.ex-tbl a.g{color:var(--green)}
+.ex-tbl tr:hover td{background:#FAFBFF}
+.pag{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--bdr);font-size:12px;color:var(--tx3)}
+.pag-btns{display:flex;gap:4px}
+.pb{background:none;border:1px solid var(--bdr);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--tx2);transition:all .12s}
+.pb:hover{background:var(--surf);border-color:#CBD5E1}.pb.cur{background:var(--blue);color:#fff;border-color:var(--blue)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .65s linear infinite;vertical-align:middle;margin-right:7px}
+.spin-dk{border-color:rgba(37,99,235,.2);border-top-color:var(--blue)}
+@keyframes rot{to{transform:rotate(360deg)}}
+.loading-row td{text-align:center;padding:32px;color:var(--tx3);font-size:13px}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+</style>
+</head>
+<body>
+
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="logo-m">FDA</div>
+    <div class="logo-n">Warning Letter Intel</div>
+    <div class="logo-s">Inspection Readiness</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-lbl">Navigation</div>
+    <a class="nav-a on" onclick="nav(event,'agent')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Query Agent
+    </a>
+    <a class="nav-a" onclick="nav(event,'trends')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trends
+    </a>
+    <a class="nav-a" onclick="nav(event,'explorer')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Letter Explorer
+    </a>
+  </nav>
+  <div class="sb-bot">
+    <div class="sb-row"><span class="sb-k">Letters indexed</span><span class="sb-v" id="stat-total">…</span></div>
+    <div class="sb-row"><span class="sb-k">With full text</span><span class="sb-v" id="stat-text">…</span></div>
+    <div class="sb-row"><span class="sb-k">Classified</span><span class="sb-v" id="stat-class">…</span></div>
+    <div class="sb-row"><span class="sb-k">Last updated</span><span class="sb-v" id="stat-run">…</span></div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- QUERY AGENT -->
+<div id="pg-agent" class="pg on">
+  <div class="eyebrow">Intelligence Platform</div>
+  <div class="h1">FDA Warning Letter Intelligence Tool</div>
+  <p class="sub">Ask a question about FDA enforcement trends. The agent searches the real warning letter database, classifies violations, and returns a structured inspection readiness brief.</p>
+  <div class="card qbox">
+    <div class="ql">Your question</div>
+    <div class="qrow">
+      <textarea class="qi" id="qi" placeholder="e.g. What data integrity violations appeared most in 2023–2024 clinical trial warning letters?"></textarea>
+      <button class="btn bp" id="qbtn" onclick="runQuery()">
+        <span class="spin hidden" id="qspin"></span><span id="qbtn-lbl">Run query</span>
+      </button>
+    </div>
+    <div class="ex-lbl">Try an example</div>
+    <div class="ex-g">
+      <button class="exb" onclick="pick(this)">What CGMP violations appeared most in 2024–2025?</button>
+      <button class="exb" onclick="pick(this)">What data integrity issues triggered warning letters in 2023?</button>
+      <button class="exb" onclick="pick(this)">Which oncology sponsors received GCP-related warning letters?</button>
+      <button class="exb" onclick="pick(this)">What informed consent failures were cited recently?</button>
+      <button class="exb" onclick="pick(this)">How has FDA enforcement shifted in the last 3 years?</button>
+    </div>
+  </div>
+  <div id="qout" class="hidden">
+    <div id="q-err" class="err-box hidden"></div>
+    <div class="card steps-card">
+      <div class="sl">Agent Steps</div>
+      <div class="tl" id="qtl"></div>
+    </div>
+    <div class="card brief-card">
+      <div class="bh-row"><span class="bbadge">Intelligence Brief</span><span class="bm" id="q-done"></span></div>
+      <div class="bb" id="q-brief"></div>
+    </div>
+    <div class="src-h">Source Warning Letters</div>
+    <div class="src-s" id="q-sub"></div>
+    <div class="card tbl">
+      <table>
+        <thead><tr><th>Posted</th><th>Issue Date</th><th>Company</th><th>Issuing Office</th><th>Subject</th><th>Links</th></tr></thead>
+        <tbody id="q-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TRENDS -->
+<div id="pg-trends" class="pg">
+  <div class="eyebrow">Analytics</div>
+  <div class="h1">Enforcement Trends</div>
+  <p class="sub">Live data from your warning letter database. Click any chart element to cross-filter all visuals.</p>
+  <div class="card fp">
+    <div class="fg fg-5">
+      <div>
+        <div class="flbl">Posted year range &nbsp;<span id="t-yr-lbl" style="font-weight:600;color:var(--tx2)">— – —</span></div>
+        <div class="drange">
+          <div class="dr-track"></div><div class="dr-fill" id="t-fill"></div>
+          <input class="dr-inp" type="range" id="t-ymin" min="2013" max="2026" value="2013">
+          <input class="dr-inp" type="range" id="t-ymax" min="2013" max="2026" value="2026">
+        </div>
+      </div>
+      <div><div class="flbl">Violation type</div><select class="fs" id="t-viol"><option value="">All violations</option></select></div>
+      <div><div class="flbl">Severity</div><select class="fs" id="t-sev"><option value="">All severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+      <div><div class="flbl">Company type</div><select class="fs" id="t-ctype"><option value="">All types</option></select></div>
+      <div><div class="flbl">Issuing office</div><select class="fs" id="t-off2"><option value="">All offices</option></select></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <div class="chips" id="t-chips"></div>
+    <button class="clr-btn hidden" id="t-clr" onclick="clearTrendFilters()">Clear all</button>
+  </div>
+  <div class="sg">
+    <div class="card sc"><div class="sc-lbl">Letters</div><div class="sc-val" id="sc-total">—</div><div class="sc-hint">in selection</div></div>
+    <div class="card sc"><div class="sc-lbl">High Severity</div><div class="sc-val" id="sc-high">—</div><div class="sc-hint" id="sc-high-pct"></div></div>
+    <div class="card sc"><div class="sc-lbl">Top Office</div><div class="sc-val" id="sc-office" style="font-size:14px;padding-top:6px">—</div><div class="sc-hint" id="sc-office-n"></div></div>
+    <div class="card sc"><div class="sc-lbl">Top Violation</div><div class="sc-val" id="sc-viol" style="font-size:12px;padding-top:6px;line-height:1.2">—</div><div class="sc-hint" id="sc-viol-n"></div></div>
+  </div>
+  <div class="cg">
+    <div class="card cc chart-clickable"><div class="ct">Letters by Year <span class="ct-hint">click to filter</span></div><div class="cw"><canvas id="ch-year"></canvas></div></div>
+    <div class="card cc chart-clickable"><div class="ct">Top Violation Types <span class="ct-hint">click to filter</span></div><div class="cw"><canvas id="ch-viol"></canvas></div></div>
+  </div>
+  <div class="cg">
+    <div class="card cc chart-clickable"><div class="ct">Severity Distribution <span class="ct-hint">click to filter</span></div><div class="cw-sm"><canvas id="ch-sev"></canvas></div></div>
+    <div class="card cc chart-clickable"><div class="ct">Issuing Office <span class="ct-hint">click to filter</span></div><div class="cw"><canvas id="ch-off"></canvas></div></div>
+  </div>
+  <div class="cg">
+    <div class="card cc" style="grid-column:1/-1"><div class="ct">Violations Over Time</div><div class="cw"><canvas id="ch-trend"></canvas></div></div>
+  </div>
+</div>
+
+<!-- LETTER EXPLORER -->
+<div id="pg-explorer" class="pg">
+  <div class="eyebrow">Database</div>
+  <div class="h1">Letter Explorer</div>
+  <p class="sub">Browse all FDA warning letters. Filters apply immediately. Click column headers to sort.</p>
+  <div class="card fp" style="margin-bottom:14px">
+    <div class="fg fg-6" style="margin-bottom:14px">
+      <div>
+        <div class="flbl">Year range &nbsp;<span id="e-yr-lbl" style="font-weight:600;color:var(--tx2)">— – —</span></div>
+        <div class="drange">
+          <div class="dr-track"></div><div class="dr-fill" id="e-fill"></div>
+          <input class="dr-inp" type="range" id="e-ymin" min="2013" max="2026" value="2013">
+          <input class="dr-inp" type="range" id="e-ymax" min="2013" max="2026" value="2026">
+        </div>
+      </div>
+      <div><div class="flbl">Issuing office</div><select class="fs" id="e-off"><option value="">All offices</option></select></div>
+      <div><div class="flbl">Violation type</div><select class="fs" id="e-viol"><option value="">All violations</option></select></div>
+      <div><div class="flbl">Severity</div><select class="fs" id="e-sev"><option value="">All severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+      <div><div class="flbl">Company type</div><select class="fs" id="e-ctype"><option value="">All types</option></select></div>
+      <div><div class="flbl">Related to</div><select class="fs" id="e-tarea"><option value="">All areas</option></select></div>
+    </div>
+    <div class="fg fg-4">
+      <div style="grid-column:1/3">
+        <div class="flbl">Search company or subject</div>
+        <input class="fi" id="e-search" placeholder="e.g. data integrity or PharmaTec…">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:16px">
+        <label style="font-size:12.5px;color:var(--tx2);display:flex;align-items:center;gap:6px;cursor:pointer;padding-bottom:2px">
+          <input type="checkbox" id="e-classified" style="cursor:pointer"> Classified only
+        </label>
+        <label style="font-size:12.5px;color:var(--tx2);display:flex;align-items:center;gap:6px;cursor:pointer;padding-bottom:2px">
+          <input type="checkbox" id="e-response" style="cursor:pointer"> Has response
+        </label>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn bs" onclick="clearExplorer()" style="width:100%">Clear filters</button>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">
+    Showing <strong id="e-count">—</strong> of <strong id="e-total">—</strong> letters
+  </div>
+  <div class="card ex-tbl-wrap">
+    <div class="ex-tbl">
+      <table>
+        <thead><tr>
+          <th data-col="company_name" onclick="sortEx('company_name')">Company</th>
+          <th data-col="posted_date" onclick="sortEx('posted_date')">Posted</th>
+          <th data-col="issuing_office" onclick="sortEx('issuing_office')">Office</th>
+          <th data-col="subject" onclick="sortEx('subject')">Subject</th>
+          <th>Violation Type</th>
+          <th data-col="severity_signal" onclick="sortEx('severity_signal')">Severity</th>
+          <th>Co. Type</th>
+          <th>Related To</th>
+          <th>Links</th>
+        </tr></thead>
+        <tbody id="ex-rows">
+          <tr class="loading-row"><td colspan="9"><span class="spin spin-dk"></span> Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pag" id="ex-pag">
+      <span id="ex-pag-info"></span>
+      <div class="pag-btns" id="ex-pag-btns"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const FDA_BASE = 'https://www.fda.gov';
+
+/* ── Navigation ── */
+function nav(e, id) {
+  e.preventDefault();
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav-a').forEach(a => a.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('on');
+  e.currentTarget.classList.add('on');
+  if (id === 'trends')   initTrends();
+  if (id === 'explorer') initExplorer();
+}
+
+/* ── Dual range slider ── */
+function initDualRange(minId, maxId, fillId, lblId, onChange) {
+  const minEl = document.getElementById(minId);
+  const maxEl = document.getElementById(maxId);
+  const fill  = document.getElementById(fillId);
+  const lbl   = document.getElementById(lblId);
+  function sync() {
+    let a = parseInt(minEl.value), b = parseInt(maxEl.value);
+    if (a > b) { minEl.value = b; a = b; }
+    const mn = parseInt(minEl.min), mx = parseInt(minEl.max), rng = mx - mn;
+    fill.style.left  = ((a - mn) / rng * 100) + '%';
+    fill.style.right = ((mx - b) / rng * 100) + '%';
+    if (lbl) lbl.textContent = a + ' – ' + b;
+    onChange(a, b);
+  }
+  minEl.addEventListener('input', sync);
+  maxEl.addEventListener('input', sync);
+  sync();
+}
+
+function setSliderRange(minId, maxId, min, max) {
+  [minId, maxId].forEach(id => {
+    const el = document.getElementById(id);
+    el.min = min; el.max = max;
+  });
+  document.getElementById(minId).value = min;
+  document.getElementById(maxId).value = max;
+}
+
+/* ── Sidebar stats (from DB) ── */
+async function loadStats() {
+  try {
+    const d = await fetch('/api/stats').then(r => r.json());
+    document.getElementById('stat-total').textContent = (+d.total_letters || 0).toLocaleString();
+    document.getElementById('stat-text').textContent  = (+d.letters_with_full_text || 0).toLocaleString();
+    document.getElementById('stat-class').textContent = (+d.classified || 0).toLocaleString();
+    document.getElementById('stat-run').textContent   = d.last_scrape ? d.last_scrape.slice(0, 10) : '—';
+  } catch (_) {}
+}
+
+/* ── Filter options (shared, fetched once) ── */
+let _opts = null;
+async function getOpts() {
+  if (!_opts) _opts = await fetch('/api/filter-options').then(r => r.json());
+  return _opts;
+}
+function popSel(id, vals) {
+  const sel = document.getElementById(id);
+  while (sel.options.length > 1) sel.remove(1);
+  for (const v of (vals || [])) {
+    const o = new Option(v, v);
+    sel.add(o);
+  }
+}
+
+/* ── Letter URL helper ── */
+function letterUrl(row) {
+  if (!row.letter_url) return null;
+  return row.letter_url.startsWith('http') ? row.letter_url : FDA_BASE + row.letter_url;
+}
+function responseUrl(row) {
+  const u = row.response_letter_url;
+  if (!u) return null;
+  return u.startsWith('http') ? u : FDA_BASE + u;
+}
+
+/* ── HTML escape ── */
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════
+   TRENDS
+════════════════════ */
+const TS = { yearMin: 2013, yearMax: 2026, viol: '', sev: '', ctype: '', office: '',
+             clickYear: null, clickViol: null, clickSev: null, clickOff: null };
+const CHS = {};
+const PAL = ['#2563EB','#7C3AED','#0891B2','#059669','#D97706','#DC2626','#9333EA','#0D9488'];
+
+let trendsInited = false;
+async function initTrends() {
+  if (trendsInited) return; trendsInited = true;
+  const opts = await getOpts();
+  if (opts.years && opts.years.length) {
+    const mn = Math.min(...opts.years), mx = Math.max(...opts.years);
+    setSliderRange('t-ymin', 't-ymax', mn, mx);
+    TS.yearMin = mn; TS.yearMax = mx;
+  }
+  initDualRange('t-ymin','t-ymax','t-fill','t-yr-lbl', (a,b) => { TS.yearMin=a; TS.yearMax=b; fetchTrends(); });
+  popSel('t-viol',  opts.violations    || []);
+  popSel('t-ctype', opts.company_types || []);
+  popSel('t-off2',  opts.offices       || []);
+  document.getElementById('t-viol') .addEventListener('change', function(){ TS.viol   = this.value; fetchTrends(); });
+  document.getElementById('t-sev')  .addEventListener('change', function(){ TS.sev    = this.value; fetchTrends(); });
+  document.getElementById('t-ctype').addEventListener('change', function(){ TS.ctype  = this.value; fetchTrends(); });
+  document.getElementById('t-off2') .addEventListener('change', function(){ TS.office = this.value; fetchTrends(); });
+  fetchTrends();
+}
+
+async function fetchTrends() {
+  const p = new URLSearchParams({ year_min: TS.yearMin, year_max: TS.yearMax });
+  if (TS.viol)      p.set('violation',       TS.viol);
+  if (TS.sev)       p.set('severity',        TS.sev);
+  if (TS.ctype)     p.set('company_type',    TS.ctype);
+  if (TS.office)    p.set('office',          TS.office);
+  if (TS.clickYear) p.set('click_year',      TS.clickYear);
+  if (TS.clickViol) p.set('click_violation', TS.clickViol);
+  if (TS.clickSev)  p.set('click_severity',  TS.clickSev);
+  if (TS.clickOff)  p.set('click_office',    TS.clickOff);
+  try {
+    const d = await fetch('/api/trends?' + p).then(r => r.json());
+    updateTrendStats(d); renderChips();
+    buildYearChart(d); buildViolChart(d); buildSevChart(d); buildOfficeChart(d); buildTrendChart(d);
+  } catch (_) {}
+}
+
+function clearTrendFilters() {
+  TS.clickYear = TS.clickViol = TS.clickSev = TS.clickOff = null;
+  TS.viol = TS.sev = TS.ctype = TS.office = '';
+  ['t-viol','t-sev','t-ctype','t-off2'].forEach(id => document.getElementById(id).value = '');
+  fetchTrends();
+}
+
+function updateTrendStats(d) {
+  const hi = d.by_severity.high || 0;
+  document.getElementById('sc-total').textContent = (d.total||0).toLocaleString();
+  document.getElementById('sc-high').textContent = hi.toLocaleString();
+  document.getElementById('sc-high-pct').textContent = d.total ? Math.round(hi/d.total*100)+'% of selection' : '';
+  const ot = Object.entries(d.by_office)[0];
+  document.getElementById('sc-office').textContent   = ot ? ot[0] : '—';
+  document.getElementById('sc-office-n').textContent = ot ? ot[1]+' letters' : '';
+  const vt = Object.entries(d.by_violation)[0];
+  document.getElementById('sc-viol').textContent   = vt ? vt[0] : '—';
+  document.getElementById('sc-viol-n').textContent = vt ? vt[1]+' letters' : '';
+}
+
+function renderChips() {
+  const chips = [];
+  const add = (lbl, fn) => chips.push({lbl, fn});
+  if (TS.clickYear) add('Year: '+TS.clickYear, ()=>{ TS.clickYear=null; });
+  if (TS.clickViol) add('Violation: '+TS.clickViol, ()=>{ TS.clickViol=null; });
+  if (TS.clickSev)  add('Severity: '+TS.clickSev,  ()=>{ TS.clickSev=null; });
+  if (TS.clickOff)  add('Office: '+TS.clickOff,    ()=>{ TS.clickOff=null; });
+  if (TS.viol)   add('Type: '+TS.viol,    ()=>{ TS.viol='';   document.getElementById('t-viol').value=''; });
+  if (TS.sev)    add('Sev: '+TS.sev,     ()=>{ TS.sev='';    document.getElementById('t-sev').value=''; });
+  if (TS.ctype)  add('Co: '+TS.ctype,    ()=>{ TS.ctype='';  document.getElementById('t-ctype').value=''; });
+  if (TS.office) add('Office: '+TS.office, ()=>{ TS.office=''; document.getElementById('t-off2').value=''; });
+  window._chipFns = chips.map(c=>c.fn);
+  document.getElementById('t-chips').innerHTML = chips.map((c,i) =>
+    `<span class="chip">${esc(c.lbl)}<button onclick="_chipFns[${i}]();fetchTrends()">×</button></span>`
+  ).join('');
+  document.getElementById('t-clr').classList.toggle('hidden', chips.length===0);
+}
+
+function baseOpts() {
+  return { responsive:true, maintainAspectRatio:false, animation:{duration:250},
+    plugins:{ legend:{display:false},
+              tooltip:{backgroundColor:'#1E293B',padding:10,cornerRadius:6,
+                       titleFont:{size:11,family:'Inter'},bodyFont:{size:11,family:'Inter'}} } };
+}
+function upsert(id, type, data, opts) {
+  if (CHS[id]) { CHS[id].data=data; CHS[id].options=opts; CHS[id].update('none'); }
+  else { CHS[id] = new Chart(document.getElementById(id), {type, data, options:opts}); }
+}
+function xScale() { return { grid:{display:false}, ticks:{font:{size:10,family:'Inter'},color:'#94A3B8'} }; }
+function yScale() { return { grid:{color:'#F1F5F9'},  ticks:{font:{size:10,family:'Inter'},color:'#94A3B8'} }; }
+
+function buildYearChart(d) {
+  const ys = d.all_years||[], vs = ys.map(y=>d.by_year[String(y)]||0);
+  upsert('ch-year','bar',{
+    labels: ys.map(String),
+    datasets:[{data:vs, borderRadius:4, borderWidth:1,
+      backgroundColor: ys.map(y=>TS.clickYear===y?'#2563EB':'#2563EBBB'),
+      borderColor:      ys.map(y=>TS.clickYear===y?'#1D4ED8':'#2563EB')}]
+  },{...baseOpts(), onClick:(e,els)=>{
+    if(!els.length){TS.clickYear=null;}else{const y=parseInt(ys[els[0].index]);TS.clickYear=TS.clickYear===y?null:y;}
+    fetchTrends();
+  }, scales:{x:xScale(),y:yScale()}});
+}
+
+function buildViolChart(d) {
+  const ent=Object.entries(d.by_violation), full=ent.map(([k])=>k);
+  const labels=full.map(k=>k.length>24?k.slice(0,24)+'…':k), vals=ent.map(([,v])=>v);
+  upsert('ch-viol','bar',{
+    labels, datasets:[{data:vals, indexAxis:'y', borderRadius:4, borderWidth:1,
+      backgroundColor: full.map(k=>TS.clickViol===k?'#7C3AED':'#7C3AEDBB'),
+      borderColor:      full.map(k=>TS.clickViol===k?'#6D28D9':'#7C3AED')}]
+  },{...baseOpts(), indexAxis:'y', onClick:(e,els)=>{
+    if(!els.length){TS.clickViol=null;}else{const v=full[els[0].index];TS.clickViol=TS.clickViol===v?null:v;}
+    fetchTrends();
+  }, scales:{x:yScale(),y:{grid:{display:false},ticks:{font:{size:10,family:'Inter'},color:'#475569'}}}});
+}
+
+function buildSevChart(d) {
+  const keys=['high','medium','low'], labels=['High','Medium','Low'];
+  const bdr=['#EF4444','#F59E0B','#10B981'];
+  upsert('ch-sev','doughnut',{
+    labels, datasets:[{data:keys.map(k=>d.by_severity[k]||0), borderWidth:2,
+      borderColor: bdr,
+      backgroundColor: keys.map((k,i)=>TS.clickSev===k?bdr[i]:bdr[i]+'BB')}]
+  },{...baseOpts(), cutout:'58%', onClick:(e,els)=>{
+    if(!els.length){TS.clickSev=null;}else{const k=keys[els[0].index];TS.clickSev=TS.clickSev===k?null:k;}
+    fetchTrends();
+  }, plugins:{...baseOpts().plugins, legend:{display:true,position:'right',
+    labels:{font:{size:11,family:'Inter'},color:'#475569',padding:12}}}});
+}
+
+function buildOfficeChart(d) {
+  const ent=Object.entries(d.by_office), labs=ent.map(([k])=>k), vals=ent.map(([,v])=>v);
+  upsert('ch-off','bar',{
+    labels:labs, datasets:[{data:vals, borderRadius:4, borderWidth:1,
+      backgroundColor: labs.map(k=>TS.clickOff===k?'#059669':'#059669BB'),
+      borderColor:      labs.map(k=>TS.clickOff===k?'#047857':'#059669')}]
+  },{...baseOpts(), onClick:(e,els)=>{
+    if(!els.length){TS.clickOff=null;}else{const o=labs[els[0].index];TS.clickOff=TS.clickOff===o?null:o;}
+    fetchTrends();
+  }, scales:{x:xScale(),y:yScale()}});
+}
+
+function buildTrendChart(d) {
+  const ys=d.all_years||[];
+  const ds=(d.trend_series||[]).map((s,i)=>({
+    label: s.violation.length>20?s.violation.slice(0,20)+'…':s.violation,
+    data: ys.map(y=>s.data[String(y)]||0),
+    fill:true, backgroundColor:PAL[i]+'18', borderColor:PAL[i], tension:.4,
+    pointRadius:3, pointBackgroundColor:PAL[i]
+  }));
+  upsert('ch-trend','line',{labels:ys.map(String),datasets:ds},{...baseOpts(),
+    scales:{x:xScale(),y:yScale()},
+    plugins:{...baseOpts().plugins,legend:{display:true,position:'top',
+      labels:{font:{size:11,family:'Inter'},color:'#475569',padding:14,usePointStyle:true}}}});
+}
+
+/* ════════════════════
+   LETTER EXPLORER
+════════════════════ */
+let EX_SORT = {col:'posted_date', dir:'desc'}, EX_PAGE=1, EX_TIMER=null;
+let explorerInited = false;
+
+async function initExplorer() {
+  if (explorerInited) return; explorerInited = true;
+  const opts = await getOpts();
+  if (opts.years && opts.years.length) {
+    setSliderRange('e-ymin','e-ymax', Math.min(...opts.years), Math.max(...opts.years));
+  }
+  initDualRange('e-ymin','e-ymax','e-fill','e-yr-lbl', ()=>{ EX_PAGE=1; debounceEx(); });
+  popSel('e-off',   opts.offices           || []);
+  popSel('e-viol',  opts.violations        || []);
+  popSel('e-ctype', opts.company_types     || []);
+  popSel('e-tarea', opts.therapeutic_areas || []);
+  ['e-off','e-viol','e-sev','e-ctype','e-tarea'].forEach(id =>
+    document.getElementById(id).addEventListener('change', ()=>{ EX_PAGE=1; fetchExplorer(); })
+  );
+  document.getElementById('e-search')    .addEventListener('input',  ()=>{ EX_PAGE=1; debounceEx(); });
+  document.getElementById('e-classified').addEventListener('change', ()=>{ EX_PAGE=1; fetchExplorer(); });
+  document.getElementById('e-response')  .addEventListener('change', ()=>{ EX_PAGE=1; fetchExplorer(); });
+  fetchExplorer();
+}
+
+function debounceEx() { clearTimeout(EX_TIMER); EX_TIMER = setTimeout(fetchExplorer, 300); }
+
+async function fetchExplorer() {
+  const yMin = parseInt(document.getElementById('e-ymin').value);
+  const yMax = parseInt(document.getElementById('e-ymax').value);
+  const p = new URLSearchParams({year_min:yMin, year_max:yMax, page:EX_PAGE,
+    per_page:20, sort_col:EX_SORT.col, sort_dir:EX_SORT.dir});
+  const vals = {
+    office:           document.getElementById('e-off').value,
+    violation:        document.getElementById('e-viol').value,
+    severity:         document.getElementById('e-sev').value,
+    company_type:     document.getElementById('e-ctype').value,
+    therapeutic_area: document.getElementById('e-tarea').value,
+    search:           document.getElementById('e-search').value.trim(),
+  };
+  Object.entries(vals).forEach(([k,v])=>{ if(v) p.set(k,v); });
+  if (document.getElementById('e-classified').checked) p.set('classified_only','true');
+  if (document.getElementById('e-response').checked)   p.set('has_response','true');
+
+  document.getElementById('ex-rows').innerHTML =
+    '<tr class="loading-row"><td colspan="9"><span class="spin spin-dk"></span> Loading…</td></tr>';
+
+  let data;
+  try {
+    data = await fetch('/api/letters?' + p).then(r => r.json());
+  } catch (_) {
+    document.getElementById('ex-rows').innerHTML =
+      '<tr class="loading-row"><td colspan="9" style="color:#EF4444">Cannot reach server — is server.py running on port 8000?</td></tr>';
+    return;
+  }
+
+  document.getElementById('e-count').textContent = data.total.toLocaleString();
+  document.getElementById('e-total').textContent = data.total.toLocaleString();
+
+  const SEV = { high:'<span class="badge bdh">High</span>', medium:'<span class="badge bdm">Medium</span>', low:'<span class="badge bdl">Low</span>' };
+  const CT  = { manufacturer:'Manufacturer', sponsor:'Sponsor', cro:'CRO', investigator_site:'Inv. Site', importer:'Importer' };
+
+  if (!data.letters.length) {
+    document.getElementById('ex-rows').innerHTML =
+      '<tr class="loading-row"><td colspan="9">No letters match your filters.</td></tr>';
+  } else {
+    document.getElementById('ex-rows').innerHTML = data.letters.map(row => {
+      const lUrl  = letterUrl(row);
+      const rUrl  = responseUrl(row);
+      const vt    = Array.isArray(row.violation_types) ? row.violation_types[0] : (row.violation_types || '');
+      const vtHtml = vt
+        ? `<span class="badge bdv" title="${esc(vt)}">${esc(vt)}</span>`
+        : '<span style="color:var(--tx3);font-size:11px">—</span>';
+      const sevHtml = SEV[row.severity_signal] || '<span style="color:var(--tx3);font-size:11px">—</span>';
+      const ctHtml  = `<span class="badge bdc">${CT[row.company_type] || esc(row.company_type || '—')}</span>`;
+      const compLink = lUrl
+        ? `<a href="${esc(lUrl)}" target="_blank" rel="noopener noreferrer">${esc(row.company_name)}</a>`
+        : esc(row.company_name);
+      const links = lUrl
+        ? `<a href="${esc(lUrl)}" target="_blank" rel="noopener noreferrer">Letter</a>`
+          + (rUrl ? ` &nbsp;<a href="${esc(rUrl)}" target="_blank" rel="noopener noreferrer" class="g">Response</a>` : '')
+        : '—';
+      return `<tr>
+        <td>${compLink}</td>
+        <td style="white-space:nowrap;color:var(--tx3);font-size:12px">${esc(row.posted_date||'')}</td>
+        <td style="font-size:12px;white-space:nowrap">${esc(row.issuing_office||'')}</td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(row.subject||'')}">${esc(row.subject||'')}</td>
+        <td>${vtHtml}</td>
+        <td>${sevHtml}</td>
+        <td>${ctHtml}</td>
+        <td style="font-size:12px;text-transform:capitalize">${esc(row.therapeutic_area||'—')}</td>
+        <td style="white-space:nowrap;font-size:12px">${links}</td>
+      </tr>`;
+    }).join('');
+  }
+  renderPag(data.total, data.page, data.pages);
+  updateSortHeaders();
+}
+
+function sortEx(col) {
+  EX_SORT.dir = EX_SORT.col===col ? (EX_SORT.dir==='asc'?'desc':'asc') : 'desc';
+  EX_SORT.col = col; EX_PAGE = 1; fetchExplorer();
+}
+function updateSortHeaders() {
+  document.querySelectorAll('.ex-tbl th[data-col]').forEach(th => {
+    th.classList.remove('asc','desc');
+    if (th.dataset.col===EX_SORT.col) th.classList.add(EX_SORT.dir);
+  });
+}
+function renderPag(total, page, pages) {
+  document.getElementById('ex-pag-info').textContent = `Page ${page} of ${pages} (${total.toLocaleString()} total)`;
+  const btns=[];
+  const add=(lbl,p,cur)=>btns.push(`<button class="pb${cur?' cur':''}"${cur?'':` onclick="goPage(${p})"`}>${lbl}</button>`);
+  if(page>1)add('‹',page-1,false);
+  let s=Math.max(1,page-2),e=Math.min(pages,page+2);
+  if(s>1)add(1,1,false);
+  if(s>2)btns.push('<span style="padding:0 4px;color:var(--tx3)">…</span>');
+  for(let p=s;p<=e;p++)add(p,p,p===page);
+  if(e<pages-1)btns.push('<span style="padding:0 4px;color:var(--tx3)">…</span>');
+  if(e<pages)add(pages,pages,false);
+  if(page<pages)add('›',page+1,false);
+  document.getElementById('ex-pag-btns').innerHTML=btns.join('');
+}
+function goPage(p) { EX_PAGE=p; fetchExplorer(); }
+function clearExplorer() {
+  ['e-off','e-viol','e-sev','e-ctype','e-tarea'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('e-search').value='';
+  document.getElementById('e-classified').checked=false;
+  document.getElementById('e-response').checked=false;
+  const mn=document.getElementById('e-ymin'), mx=document.getElementById('e-ymax');
+  mn.value=mn.min; mx.value=mx.max;
+  const f=document.getElementById('e-fill'), l=document.getElementById('e-yr-lbl');
+  f.style.left='0%'; f.style.right='0%';
+  if(l) l.textContent=mn.min+' – '+mx.max;
+  EX_PAGE=1; EX_SORT={col:'posted_date',dir:'desc'}; fetchExplorer();
+}
+
+/* ════════════════════
+   QUERY AGENT — real streaming
+════════════════════ */
+function pick(btn) { document.getElementById('qi').value = btn.textContent.trim(); }
+
+let agentRunning = false;
+const TOOL_LABELS = {
+  search_letter_index: 'search_letter_index',
+  fetch_letter_text:   'fetch_letter_text',
+  classify_violation:  'classify_violation',
+  synthesize_brief:    'synthesize_brief',
+};
+
+async function runQuery() {
+  if (agentRunning) return;
+  const question = document.getElementById('qi').value.trim();
+  if (!question) return;
+  agentRunning = true;
+
+  const btn  = document.getElementById('qbtn');
+  const spin = document.getElementById('qspin');
+  const lbl  = document.getElementById('qbtn-lbl');
+  btn.disabled=true; spin.classList.remove('hidden'); lbl.textContent='Running…';
+
+  const out    = document.getElementById('qout');
+  const errBox = document.getElementById('q-err');
+  const tl     = document.getElementById('qtl');
+  const brief  = document.getElementById('q-brief');
+  const done   = document.getElementById('q-done');
+  const sub    = document.getElementById('q-sub');
+  const rows   = document.getElementById('q-rows');
+  out.classList.remove('hidden');
+  errBox.classList.add('hidden'); tl.innerHTML=''; brief.innerHTML=''; rows.innerHTML='';
+  done.textContent=''; sub.textContent='';
+
+  let stepN = 0;
+  function addStep(text, status) {
+    const dotCls = status==='error' ? 'd-err' : 'd-done';
+    const d = document.createElement('div');
+    d.className='step'; d.style.animationDelay=(stepN*0.07)+'s';
+    d.innerHTML=`<div class="dot ${dotCls}"></div><div class="st">${esc(text)}</div>`;
+    tl.appendChild(d); stepN++;
+  }
+
+  let buf = '';
+  try {
+    const resp = await fetch('/api/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question})
+    });
+    if (!resp.ok) throw new Error('HTTP '+resp.status);
+
+    const reader=resp.body.getReader(), dec=new TextDecoder();
+    while(true) {
+      const {done:rd, value}=await reader.read(); if(rd)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines) {
+        if(!line.startsWith('data: '))continue;
+        let ev; try{ ev=JSON.parse(line.slice(6)); }catch(_){continue;}
+
+        if(ev.type==='step') {
+          const tag  = TOOL_LABELS[ev.tool] || ev.tool;
+          const text = ev.args ? tag+'('+ev.args+')' : tag;
+          addStep(text,'done');
+        } else if(ev.type==='info' && ev.text) {
+          addStep(ev.text,'done');
+        } else if(ev.type==='done') {
+          done.textContent = stepN+' steps completed';
+          brief.innerHTML  = mdToHtml(ev.answer||'');
+          const letters = ev.letters||[];
+          sub.textContent = letters.length
+            ? letters.length+' letters retrieved — company names link to FDA.gov'
+            : 'No source letters captured by the agent.';
+          rows.innerHTML = letters.map(row => {
+            const lUrl = letterUrl(row);
+            const rUrl = responseUrl(row);
+            const comp = lUrl
+              ? `<a href="${esc(lUrl)}" target="_blank" rel="noopener noreferrer">${esc(row.company_name||'')}</a>`
+              : esc(row.company_name||'');
+            const links = lUrl
+              ? `<a href="${esc(lUrl)}" target="_blank" rel="noopener noreferrer">Letter</a>`
+                +(rUrl?` &nbsp;<a href="${esc(rUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--green)">Response</a>`:'')
+              : '—';
+            return `<tr>
+              <td style="color:var(--tx3);font-size:12px;white-space:nowrap">${esc(row.posted_date||'')}</td>
+              <td style="color:var(--tx3);font-size:12px;white-space:nowrap">${esc(row.letter_issue_date||'')}</td>
+              <td>${comp}</td>
+              <td style="font-size:12px">${esc(row.issuing_office||'')}</td>
+              <td style="font-size:12px">${esc(row.subject||'')}</td>
+              <td style="font-size:12px;white-space:nowrap">${links}</td>
+            </tr>`;
+          }).join('') || '<tr><td colspan="6" style="padding:12px;color:var(--tx3);font-size:12px">No source letters were captured.</td></tr>';
+        } else if(ev.type==='error') {
+          addStep('Error: '+ev.message,'error');
+          errBox.textContent='Agent error: '+ev.message; errBox.classList.remove('hidden');
+        }
+      }
+    }
+  } catch(err) {
+    addStep('Connection error: '+err.message,'error');
+    errBox.textContent='Cannot reach the server. Make sure server.py is running on port 8000.';
+    errBox.classList.remove('hidden');
+  } finally {
+    agentRunning=false; btn.disabled=false;
+    spin.classList.add('hidden'); lbl.textContent='Run query';
+  }
+}
+
+/* ── markdown → HTML (for brief) ── */
+function mdToHtml(md) {
+  let h = md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^# (.+)$/gm,'<h3>$1</h3>');
+  // Convert bullet lists
+  const lines = h.split('\n');
+  const out=[]; let inList=false;
+  for(const line of lines) {
+    if(/^[-*] /.test(line)){ if(!inList){out.push('<ul>');inList=true;} out.push('<li>'+line.slice(2)+'</li>'); }
+    else if(/^\d+\. /.test(line)){ if(!inList){out.push('<ul>');inList=true;} out.push('<li>'+line.replace(/^\d+\. /,'')+'</li>'); }
+    else { if(inList){out.push('</ul>');inList=false;} out.push(line); }
+  }
+  if(inList) out.push('</ul>');
+  // Wrap non-tagged blocks in <p>
+  return out.join('\n').split(/\n{2,}/).map(block=>{
+    block=block.trim();
+    if(!block) return '';
+    if(/^<[hup]/.test(block)) return block;
+    return '<p>'+block.replace(/\n/g,' ')+'</p>';
+  }).join('');
+}
+
+/* ── Bootstrap ── */
+loadStats();
+</script>
+</body>
+</html>
